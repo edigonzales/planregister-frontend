@@ -1,0 +1,38 @@
+version: '3'
+services:
+  edit-db:
+    image: bitnami/postgresql:14.8.0-debian-11-r74
+    environment:
+      POSTGRESQL_DATABASE: edit
+      POSTGRESQL_USERNAME: ddluser
+      POSTGRESQL_PASSWORD: ddluser
+      POSTGRESQL_POSTGRES_PASSWORD: secret
+      POSTGRESQL_INITSCRIPTS_USERNAME: postgres
+      POSTGRESQL_INITSCRIPTS_PASSWORD: secret
+      # Für Spring Boot müssen die ENV-Variablen
+      # gleich wie im offiziellen Image heissen.
+      # Wir schaffen hier Redundanz. Da es aber 
+      # nur für Developing ist, scheint mir das OK.
+      # Aus Transparenzgründen wird das hier gemacht.
+      # Das scheint aber nur mit DB-Namen und Passwort
+      # zu funktionieren. Den Benutzer kriege ich 
+      # nicht hin und muss mit Superuser arbeiten.
+      POSTGRES_DB: edit    
+      POSTGRES_PASSWORD: secret
+      #POSTGRESQL_INITDB_ARGS: --locale=de_CH.UTF-8
+    ports:
+      - "54321:5432"
+    volumes:
+      - type: bind
+        source: ./setup.sql
+        target: /docker-entrypoint-preinitdb.d/setup.sql
+      - type: bind
+        source: ./prepare_setup.sh
+        target: /docker-entrypoint-preinitdb.d/prepare_setup.sh
+      - type: volume
+        source: postgresql_data_edit_planregister
+        target: /bitnami/postgresql
+    labels:
+      org.springframework.boot.service-connection: postgres
+volumes:
+  postgresql_data_edit_planregister:
