@@ -74,16 +74,16 @@ public class PlanregisterView extends VerticalLayout {
                 return d1.rrbDatum().compareTo(d2.rrbDatum());
             }
         })
-        .setHeader("RRB-Datum");        
-        grid.addColumn(Dokument::rrbNr).setHeader("RRB-Nr.").setSortable(true);
-        grid.addColumn(Dokument::planungsinstrument).setHeader("Planungsinstrument").setSortable(true);
-        grid.addColumn(Dokument::bezeichnung).setHeader("Bezeichnung").setSortable(true).setFlexGrow(3);
-        grid.addColumn(Dokument::gemeinde).setHeader("Gemeinde").setSortable(true);
-        grid.addColumn(Dokument::rechtsstatus).setHeader("Rechtsstatus").setSortable(true);
-        grid.addColumn(Dokument::planungsbehoerde).setHeader("Planungsbehörde").setSortable(true);
+        .setHeader("RRB-Datum").setWidth("5%");        
+        grid.addColumn(Dokument::rrbNr).setHeader("RRB-Nr.").setSortable(true).setWidth("5%");
+        grid.addColumn(Dokument::planungsinstrument).setHeader("Planungsinstrument").setSortable(true).setWidth("10%");
+        grid.addColumn(Dokument::bezeichnung).setHeader("Bezeichnung").setSortable(true).setAutoWidth(true).setFlexGrow(1);
+        grid.addColumn(Dokument::gemeinde).setHeader("Gemeinde").setSortable(true).setWidth("10%");
+        grid.addColumn(Dokument::rechtsstatus).setHeader("Rechtsstatus").setSortable(true).setWidth("5%");
+        grid.addColumn(Dokument::planungsbehoerde).setHeader("Planungsbehörde").setSortable(true).setWidth("5%");
         
-        grid.getColumns().forEach(col -> col.setAutoWidth(true)); 
-
+        //grid.getColumns().forEach(col -> col.setAutoWidth(true)); 
+        
         
     }
 
