@@ -1,12 +1,15 @@
+vaadin-grid-cell-content {
+  padding: var(--lumo-space-m) var(--lumo-space-m);
+}
+
 .hello-world-view .filter-layout {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   align-items: end;
   gap: 0 var(--lumo-space-l);
   margin: 0 auto;
-  max-width: 1024px;
-  background-color: red;
-
+  max-width: 1400px;
+  padding: 0 var(--lumo-space-l);
 }
 
 .hello-world-view .filter-layout .double-width {

@@ -7,7 +7,9 @@ import com.vaadin.flow.component.Key;
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.checkbox.CheckboxGroup;
+import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.combobox.MultiSelectComboBox;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.grid.Grid;
@@ -61,19 +63,21 @@ public class PlanregisterView extends VerticalLayout {
         setSizeFull();
 //        configureGrid(); 
 
-        Div container = new Div();
-        container.setId("container-div");
+//        Div container = new Div();
+//        container.setId("container-div");
         
         // TODO siehe adress form -> FormLayout
         filters = new Filters(() -> refreshGrid());
         VerticalLayout layout = new VerticalLayout(filters);
+        //layout.setAlignItems(FlexComponent.Alignment.BASELINE);
         //VerticalLayout layout = new VerticalLayout(createMobileFilters(), filters, createGrid());
         layout.setSizeFull();
         layout.setPadding(false);
         layout.setSpacing(false);
-        
-        container.add(layout);
-        add(container);
+
+        add(layout);
+//        container.add(layout);
+//        add(container);
 
         
         //add(getToolbar(), grid);
@@ -82,13 +86,16 @@ public class PlanregisterView extends VerticalLayout {
 //        updateList();
     }
     
-    public static class Filters extends Div /*implements Specification<SamplePerson>*/ {
+    public static class Filters extends HorizontalLayout /*implements Specification<SamplePerson>*/ {
 
-        private final TextField name = new TextField("Name");
-        private final TextField phone = new TextField("Phone");
-        private final DatePicker startDate = new DatePicker("Date of Birth");
+        private final TextField fts = new TextField("Bezeichnung / Stichwort / RRB-Nr.");
+        private final DatePicker startDate = new DatePicker("RRB-Datum");
         private final DatePicker endDate = new DatePicker();
+        private final ComboBox<String> municipality = new ComboBox("Gemeinde");
         private final MultiSelectComboBox<String> occupations = new MultiSelectComboBox<>("Occupation");
+        
+        private final Checkbox isPartOfLandUsePlanning = new Checkbox();
+
         private final CheckboxGroup<String> roles = new CheckboxGroup<>("Role");
 
         public Filters(Runnable onSearch) {
@@ -96,8 +103,10 @@ public class PlanregisterView extends VerticalLayout {
             addClassName("filter-layout");
             addClassNames(LumoUtility.Padding.Horizontal.LARGE, LumoUtility.Padding.Vertical.MEDIUM,
                     LumoUtility.BoxSizing.BORDER);
-            name.setPlaceholder("First or last name");
+            //fts.setPlaceholder("First or last name");
 
+            isPartOfLandUsePlanning.setLabel("Bestandteil der Ortsplanung");
+            
             occupations.setItems("Insurance Clerk", "Mortarman", "Beer Coil Cleaner", "Scale Attendant");
 
             roles.setItems("Worker", "Supervisor", "Manager", "External");
@@ -107,10 +116,10 @@ public class PlanregisterView extends VerticalLayout {
             Button resetBtn = new Button("Reset");
             resetBtn.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
             resetBtn.addClickListener(e -> {
-                name.clear();
-                phone.clear();
+                fts.clear();
                 startDate.clear();
                 endDate.clear();
+                municipality.clear();
                 occupations.clear();
                 roles.clear();
                 onSearch.run();
@@ -124,18 +133,20 @@ public class PlanregisterView extends VerticalLayout {
             actions.addClassName(LumoUtility.Gap.SMALL);
             actions.addClassName("actions");
 
-            add(name, phone, createDateRangeFilter(), occupations, roles, actions);
+            this.setAlignItems(FlexComponent.Alignment.BASELINE);
+            
+            add(fts, createDateRangeFilter(), municipality, occupations, isPartOfLandUsePlanning, roles, actions);
 
         }
         
         private Component createDateRangeFilter() {
-            startDate.setPlaceholder("From");
+            startDate.setPlaceholder("von");
 
-            endDate.setPlaceholder("To");
+            endDate.setPlaceholder("bis");
 
             // For screen readers
-            startDate.setAriaLabel("From date");
-            endDate.setAriaLabel("To date");
+            startDate.setAriaLabel("Datum von");
+            endDate.setAriaLabel("Datum bis");
 
             FlexLayout dateRangeComponent = new FlexLayout(startDate, new Text(" – "), endDate);
             dateRangeComponent.setAlignItems(FlexComponent.Alignment.BASELINE);
