@@ -2,11 +2,20 @@ package ch.so.arp.planregister.views;
 
 import java.util.Comparator;
 
+import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Key;
+import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.checkbox.CheckboxGroup;
+import com.vaadin.flow.component.combobox.MultiSelectComboBox;
+import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
+import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.orderedlayout.FlexLayout;
+import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
@@ -15,6 +24,7 @@ import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouteAlias;
+import com.vaadin.flow.theme.lumo.LumoUtility;
 
 import ch.so.arp.planregister.Dokument;
 import ch.so.arp.planregister.DokumentService;
@@ -25,6 +35,7 @@ import ch.so.arp.planregister.DokumentService;
 public class PlanregisterView extends VerticalLayout {
     private Grid<Dokument> grid = new Grid<>(Dokument.class, false); 
     private TextField filterText = new TextField();
+    private Filters filters;
 
     private DokumentService dokumentService;
 //    private TextField name;
@@ -44,14 +55,97 @@ public class PlanregisterView extends VerticalLayout {
 //
 //        add(name, sayHello);
         
-        addClassName("list-view"); 
+        //addClassName("list-view-fooooXXXX"); 
+        addClassNames("hello-world-view");
+
         setSizeFull();
-        configureGrid(); 
+//        configureGrid(); 
 
-        add(getToolbar(), grid);
+        Div container = new Div();
+        container.setId("container-div");
+        
+        // TODO siehe adress form -> FormLayout
+        filters = new Filters(() -> refreshGrid());
+        VerticalLayout layout = new VerticalLayout(filters);
+        //VerticalLayout layout = new VerticalLayout(createMobileFilters(), filters, createGrid());
+        layout.setSizeFull();
+        layout.setPadding(false);
+        layout.setSpacing(false);
+        
+        container.add(layout);
+        add(container);
 
-        updateList();
+        
+        //add(getToolbar(), grid);
+//        add(getToolbar());
+//
+//        updateList();
     }
+    
+    public static class Filters extends Div /*implements Specification<SamplePerson>*/ {
+
+        private final TextField name = new TextField("Name");
+        private final TextField phone = new TextField("Phone");
+        private final DatePicker startDate = new DatePicker("Date of Birth");
+        private final DatePicker endDate = new DatePicker();
+        private final MultiSelectComboBox<String> occupations = new MultiSelectComboBox<>("Occupation");
+        private final CheckboxGroup<String> roles = new CheckboxGroup<>("Role");
+
+        public Filters(Runnable onSearch) {
+            setWidthFull();
+            addClassName("filter-layout");
+            addClassNames(LumoUtility.Padding.Horizontal.LARGE, LumoUtility.Padding.Vertical.MEDIUM,
+                    LumoUtility.BoxSizing.BORDER);
+            name.setPlaceholder("First or last name");
+
+            occupations.setItems("Insurance Clerk", "Mortarman", "Beer Coil Cleaner", "Scale Attendant");
+
+            roles.setItems("Worker", "Supervisor", "Manager", "External");
+            roles.addClassName("double-width");
+
+            // Action buttons
+            Button resetBtn = new Button("Reset");
+            resetBtn.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
+            resetBtn.addClickListener(e -> {
+                name.clear();
+                phone.clear();
+                startDate.clear();
+                endDate.clear();
+                occupations.clear();
+                roles.clear();
+                onSearch.run();
+            });
+
+            Button searchBtn = new Button("Search");
+            searchBtn.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+            searchBtn.addClickListener(e -> onSearch.run());
+
+            Div actions = new Div(resetBtn, searchBtn);
+            actions.addClassName(LumoUtility.Gap.SMALL);
+            actions.addClassName("actions");
+
+            add(name, phone, createDateRangeFilter(), occupations, roles, actions);
+
+        }
+        
+        private Component createDateRangeFilter() {
+            startDate.setPlaceholder("From");
+
+            endDate.setPlaceholder("To");
+
+            // For screen readers
+            startDate.setAriaLabel("From date");
+            endDate.setAriaLabel("To date");
+
+            FlexLayout dateRangeComponent = new FlexLayout(startDate, new Text(" – "), endDate);
+            dateRangeComponent.setAlignItems(FlexComponent.Alignment.BASELINE);
+            dateRangeComponent.addClassName(LumoUtility.Gap.XSMALL);
+
+            return dateRangeComponent;
+        }
+
+    }
+    
     
     private void configureGrid() {
         grid.addClassNames("document-grid");
@@ -118,4 +212,10 @@ public class PlanregisterView extends VerticalLayout {
         grid.setItems(dokumentService.findAllDocuments(filterText.getValue()));
 //        dokumentService.findAllDocuments(filterText.getValue());
     }
+    
+    private void refreshGrid() {
+        System.out.println("refreshGrid");
+        //grid.getDataProvider().refreshAll();
+    }
+
 }
