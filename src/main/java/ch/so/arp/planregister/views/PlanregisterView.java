@@ -20,6 +20,7 @@ import com.vaadin.flow.component.orderedlayout.FlexLayout;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.textfield.Autocomplete;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.renderer.LocalDateRenderer;
 import com.vaadin.flow.data.value.ValueChangeMode;
@@ -91,12 +92,11 @@ public class PlanregisterView extends VerticalLayout {
         private final TextField fts = new TextField("Bezeichnung / Stichwort / RRB-Nr.");
         private final DatePicker startDate = new DatePicker("RRB-Datum");
         private final DatePicker endDate = new DatePicker();
-        private final ComboBox<String> municipality = new ComboBox("Gemeinde");
-        private final MultiSelectComboBox<String> occupations = new MultiSelectComboBox<>("Occupation");
-        
+        private final ComboBox<String> municipality = new ComboBox<String>("Gemeinde");
+        private final ComboBox<String> planningInstrument = new ComboBox<String>("Planungsinstrument");
+        private final ComboBox<String> legalStatus = new ComboBox<String>("Rechtsstatus");
+        private final ComboBox<String> planningAuthority = new ComboBox<String>("Planungsbehörde");
         private final Checkbox isPartOfLandUsePlanning = new Checkbox();
-
-        private final CheckboxGroup<String> roles = new CheckboxGroup<>("Role");
 
         public Filters(Runnable onSearch) {
             setWidthFull();
@@ -104,14 +104,36 @@ public class PlanregisterView extends VerticalLayout {
             addClassNames(LumoUtility.Padding.Horizontal.LARGE, LumoUtility.Padding.Vertical.MEDIUM,
                     LumoUtility.BoxSizing.BORDER);
             //fts.setPlaceholder("First or last name");
+            
+            fts.setAutocomplete(Autocomplete.OFF);
 
             isPartOfLandUsePlanning.setLabel("Bestandteil der Ortsplanung");
             
-            occupations.setItems("Insurance Clerk", "Mortarman", "Beer Coil Cleaner", "Scale Attendant");
+//            occupations.setItems("Insurance Clerk", "Mortarman", "Beer Coil Cleaner", "Scale Attendant");
+//
+//            roles.setItems("Worker", "Supervisor", "Manager", "External");
+//            roles.addClassName("double-width");
 
-            roles.setItems("Worker", "Supervisor", "Manager", "External");
-            roles.addClassName("double-width");
+            // Action on enter
+            // TODO:
+            // - Soll das überhaupt angeboten werden?
+            // - Wird bissle mühsam, weil das Reseten das Ereignis
+            // auch wieder auslöst.
+            fts.addKeyDownListener(Key.ENTER, event -> {
+                System.out.println("run...");
+            });
 
+            startDate.addValueChangeListener(event -> {
+                // TODO: 
+                // - Verhindern, dass nach dem Drücken des Reset-Buttons auch nochmals die Tabelle
+                // gefreshed wird.
+                // - Anpassen wahrscheinlich an den ersten Werte in der ComboBox (bei normalen ComboBoxen).
+                if (event.getValue() != null) {
+                    System.out.println("startDate run");                    
+                }
+            });
+                        
+            
             // Action buttons
             Button resetBtn = new Button("Reset");
             resetBtn.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
@@ -120,8 +142,10 @@ public class PlanregisterView extends VerticalLayout {
                 startDate.clear();
                 endDate.clear();
                 municipality.clear();
-                occupations.clear();
-                roles.clear();
+                planningInstrument.clear();
+                legalStatus.clear();
+                planningAuthority.clear();
+                isPartOfLandUsePlanning.clear();
                 onSearch.run();
             });
 
@@ -135,26 +159,24 @@ public class PlanregisterView extends VerticalLayout {
 
             this.setAlignItems(FlexComponent.Alignment.BASELINE);
             
-            add(fts, createDateRangeFilter(), municipality, occupations, isPartOfLandUsePlanning, roles, actions);
+            add(fts, createDateRangeFilter(), municipality, planningInstrument, legalStatus, planningAuthority, isPartOfLandUsePlanning, actions);
 
         }
         
         private Component createDateRangeFilter() {
             startDate.setPlaceholder("von");
-
             endDate.setPlaceholder("bis");
-
+        
             // For screen readers
             startDate.setAriaLabel("Datum von");
             endDate.setAriaLabel("Datum bis");
-
+        
             FlexLayout dateRangeComponent = new FlexLayout(startDate, new Text(" – "), endDate);
             dateRangeComponent.setAlignItems(FlexComponent.Alignment.BASELINE);
             dateRangeComponent.addClassName(LumoUtility.Gap.XSMALL);
-
+        
             return dateRangeComponent;
         }
-
     }
     
     
