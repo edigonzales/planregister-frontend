@@ -11,6 +11,7 @@ import java.net.URISyntaxException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -26,7 +27,7 @@ public class DokumentService {
     @Autowired
     JdbcTemplate jdbcTemplate;
     
-    public List<Dokument> findAllDocuments(String stringFilter) {
+    public List<Dokument> findDocuments(List<Predicate> predicateList) {
     //public void findAllDocuments(String stringFilter) {
 //        if (stringFilter == null || stringFilter.isEmpty()) { 
 //            return contactRepository.findAll();
@@ -34,12 +35,41 @@ public class DokumentService {
 //            return contactRepository.search(stringFilter);
 //        }
         
-        List<Dokument> documentList=jdbcTemplate.query(
-                "SELECT planungsinstrument, bezeichnung, planungsbehoerde, gemeinde, rechtskraft_ab, "
+        String stmt = "SELECT planungsinstrument, bezeichnung, planungsbehoerde, gemeinde, rechtskraft_ab, "
                 + "rechtsstatus, TRIM(dokument_url) AS dokument_url, rrb_datum, rrb_nr, TRIM(rrb_url) AS rrb_url, TRIM(sonderbauvorschrift_url) AS sonderbauvorschrift_url, "
                 + "karte_url, zustaendige_amt, aktuelle_ortsplanung, offiziellenr "
-                + "FROM " + dbschema + ".dokument ORDER BY rrb_datum DESC NULLS LAST"
-                , new RowMapper<Dokument>() {
+                + "FROM " + dbschema + ".dokument";
+        
+        String whereClause = "";
+        List<Object> argsList = new ArrayList<>();
+        List<Integer> argTypesList = new ArrayList<>();
+        Object[] args = null;
+        int[] argTypes = null;
+        if (predicateList.size() > 0) {
+            for (int i=0; i<predicateList.size(); i++) {
+                Predicate predicate = predicateList.get(i);
+                if (i==0) {
+                    whereClause += " WHERE";
+                } else {
+                    whereClause += " AND";
+                }
+                whereClause += " "+predicate.databaseColumn() + " " + predicate.operator() + " ?";
+                argsList.add(predicate.value());
+                argTypesList.add(predicate.argType());
+            }
+
+            args = argsList.toArray();
+            argTypes = argTypesList.stream().mapToInt(Integer::intValue).toArray();
+
+            stmt += whereClause;
+        }
+        
+        stmt += " ORDER BY rrb_datum DESC NULLS LAST";
+        
+        log.debug(stmt);
+        
+        List<Dokument> documentList=jdbcTemplate.query(stmt, args, argTypes,
+                new RowMapper<Dokument>() {
                     @Override
                     public Dokument mapRow(ResultSet rs, int rowNum) throws SQLException {
                         String planungsinstrument = rs.getString("planungsinstrument");
@@ -93,6 +123,7 @@ public class DokumentService {
                     }
                 });
         
+        log.debug("query result size: " + documentList.size());
         return documentList;
    
     }

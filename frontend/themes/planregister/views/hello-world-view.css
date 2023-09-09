@@ -1,5 +1,23 @@
+/*
 vaadin-grid-cell-content {
   padding: var(--lumo-space-m) var(--lumo-space-m);
+}
+*/
+
+vaadin-text-field[readonly] > input {
+  color: var(--lumo-body-text-color) !important;
+}
+
+.hello-world-view .title-h1 {
+  margin: 0 auto;
+  max-width: 1600px;
+  padding: 0 var(--lumo-space-l);
+}
+
+.hello-world-view .document-grid {
+  margin: 0 auto;
+  max-width: 1600px;
+  padding: 0 var(--lumo-space-l);
 }
 
 .hello-world-view .filter-layout {
@@ -8,8 +26,9 @@ vaadin-grid-cell-content {
   align-items: end;
   gap: 0 var(--lumo-space-l);
   margin: 0 auto;
-  max-width: 1400px;
-  padding: 0 var(--lumo-space-l);
+  max-width: 1600px;
+  padding: 0 0;
+  margin-bottom: 50px;
 }
 
 .hello-world-view .filter-layout .double-width {
@@ -33,6 +52,7 @@ vaadin-grid-cell-content {
 }
 
 /* Mobile filters */
+/*
 .hello-world-view .mobile-filters {
   display: none;
   position: relative;
@@ -82,3 +102,4 @@ vaadin-grid-cell-content {
     color: var(--lumo-body-text-color);
   }
 }
+*/
