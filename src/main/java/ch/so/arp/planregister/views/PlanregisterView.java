@@ -4,7 +4,9 @@ import java.sql.Types;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Stream;
 
 import com.vaadin.flow.component.Component;
@@ -214,23 +216,29 @@ public class PlanregisterView extends VerticalLayout {
             add(fts, createDateRangeFilter(), municipality, planningInstrument, legalStatus, planningAuthority, isPartOfLandUsePlanning, actions);
         }
         
-        public List<Predicate> getPredicates() {
-            List<Predicate> predicateList = new ArrayList<>();
+        public List<Object> getPredicates() {
+            // TODO
+            // Igitt, siehe Folgekommentare.
+            List<Object> predicateList = new ArrayList<>();
             
             if (!fts.isEmpty()) {
+                Map<String,List<Predicate>> predicateMap = new HashMap<>();
                 String[] tokens = fts.getValue().split(" ");
+                // TODO
+                // Das ist so natürlich unsexy. Es bräuchte sowas wie ne Expression-API.
+                // Siehe z.B. Apache Cayenne Expressions.
                 for (String token : tokens) {
-                    predicateList.add(new Predicate("bezeichnung", "%"+token+"%", Types.VARCHAR, "ILIKE"));
+                    List<Predicate> ftsPredicateList = new ArrayList<>();
+                    ftsPredicateList.add(new Predicate("bezeichnung", "%"+token+"%", Types.VARCHAR, "ILIKE"));
+                    ftsPredicateList.add(new Predicate("rrb_nr", "%"+token+"%", Types.VARCHAR, "ILIKE"));
+                    ftsPredicateList.add(new Predicate("gemeinde", "%"+token+"%", Types.VARCHAR, "ILIKE"));
+                    ftsPredicateList.add(new Predicate("planungsinstrument", "%"+token+"%", Types.VARCHAR, "ILIKE"));
+                    ftsPredicateList.add(new Predicate("rechtsstatus", "%"+token+"%", Types.VARCHAR, "ILIKE"));
+                    ftsPredicateList.add(new Predicate("planungsbehoerde", "%"+token+"%", Types.VARCHAR, "ILIKE"));
                     
-                    // TODO
-                    // Das geht noch nicht. Es resultieren AND, es müssen aber OR sein
-                    // Sowas wie ein NestedPredicate?
-//                    predicateList.add(new Predicate("rrb_nr", "%"+token+"%", Types.VARCHAR, "ILIKE"));
-//                    predicateList.add(new Predicate("gemeinde", "%"+token+"%", Types.VARCHAR, "ILIKE"));
-//                    predicateList.add(new Predicate("planungsinstrument", "%"+token+"%", Types.VARCHAR, "ILIKE"));
-//                    predicateList.add(new Predicate("rechtsstatus", "%"+token+"%", Types.VARCHAR, "ILIKE"));
-//                    predicateList.add(new Predicate("planungsbehoerde", "%"+token+"%", Types.VARCHAR, "ILIKE"));
+                    predicateMap.put(token, ftsPredicateList);
                 }
+                predicateList.add(predicateMap);
             }
             
             if (!startDate.isEmpty()) {
@@ -310,7 +318,6 @@ public class PlanregisterView extends VerticalLayout {
         grid.addColumn(Dokument::planungsinstrument).setHeader("Planungsinstrument").setSortable(true).setWidth("10%");
         grid.addColumn(Dokument::bezeichnung).setHeader("Bezeichnung").setSortable(true).setAutoWidth(true).setFlexGrow(2);
         grid.addColumn(Dokument::gemeinde).setHeader("Gemeinde").setSortable(true).setWidth("10%");
-        //grid.addColumn(Dokument::rechtsstatus).setHeader("Rechtsstatus").setSortable(true).setWidth("5%");
         grid.addColumn(Dokument::rechtsstatus).setHeader("Rechtsstatus").setSortable(true).setWidth("5%");
         grid.addColumn(Dokument::planungsbehoerde).setHeader("Planungsbehörde").setSortable(true).setWidth("5%");
         
@@ -342,6 +349,7 @@ public class PlanregisterView extends VerticalLayout {
         private final TextField planningAuthorityField = new TextField("Planungsbehörde");
         private final TextField responsibleOfficeField = new TextField("Zuständiges Amt");
         private final TextField documentLinkField = new TextField("Dokumente");
+        private final TextField specialDocumentLinkField = new TextField("Sonderbauvorschriften");
         private final TextField mapLinkField = new TextField("Karte");
 
         private final DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd.MM.yyyy");
@@ -350,7 +358,8 @@ public class PlanregisterView extends VerticalLayout {
             setResponsiveSteps(new ResponsiveStep("0", 1));                
                 Stream.of(municipalityField, planningInstrumentField, descriptionField, rrbDateField, 
                         rrbNumberField, inForceSinceField, legalStatusField, planningAuthorityField, 
-                        responsibleOfficeField, documentLinkField, mapLinkField).forEach(field -> {
+                        responsibleOfficeField, documentLinkField, specialDocumentLinkField, 
+                        mapLinkField).forEach(field -> {
                             field.setReadOnly(true);
                             add(field);
                         });            
@@ -359,6 +368,12 @@ public class PlanregisterView extends VerticalLayout {
                 documentLinkField.setPrefixComponent(VaadinIcon.FILE.create());
                 documentLinkField.getElement().addEventListener("click", event -> {
                     getUI().ifPresent(ui -> ui.getPage().open(documentLinkField.getValue()));
+                });
+
+                specialDocumentLinkField.setPrefixComponent(VaadinIcon.FILE.create());
+                specialDocumentLinkField.getElement().addEventListener("click", event -> {
+                    if (specialDocumentLinkField.getValue().length() > 0)
+                        getUI().ifPresent(ui -> ui.getPage().open(specialDocumentLinkField.getValue()));
                 });
 
                 mapLinkField.setPrefixComponent(VaadinIcon.MAP_MARKER.create());
@@ -379,6 +394,7 @@ public class PlanregisterView extends VerticalLayout {
             planningAuthorityField.setValue(document.planungsbehoerde());
             responsibleOfficeField.setValue(document.zustaendigesAmt());
             documentLinkField.setValue(document.dokumentUrl().toString());
+            if (document.sonderbauvorschriftenUrl()!=null) specialDocumentLinkField.setValue(document.sonderbauvorschriftenUrl().toString());
             mapLinkField.setValue(document.karteUrl().toString());
 
         }

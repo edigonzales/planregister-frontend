@@ -12,7 +12,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,7 +29,7 @@ public class DokumentService {
     @Autowired
     JdbcTemplate jdbcTemplate;
     
-    public List<Dokument> findDocuments(List<Predicate> predicateList) {
+    public List<Dokument> findDocuments(List<Object> predicateList) {
     //public void findAllDocuments(String stringFilter) {
 //        if (stringFilter == null || stringFilter.isEmpty()) { 
 //            return contactRepository.findAll();
@@ -47,15 +49,40 @@ public class DokumentService {
         int[] argTypes = null;
         if (predicateList.size() > 0) {
             for (int i=0; i<predicateList.size(); i++) {
-                Predicate predicate = predicateList.get(i);
                 if (i==0) {
                     whereClause += " WHERE";
                 } else {
                     whereClause += " AND";
                 }
-                whereClause += " "+predicate.databaseColumn() + " " + predicate.operator() + " ?";
-                argsList.add(predicate.value());
-                argTypesList.add(predicate.argType());
+                if (predicateList.get(i) instanceof Predicate p) {
+                    whereClause += " "+p.databaseColumn() + " " + p.operator() + " ?";
+                    argsList.add(p.value());
+                    argTypesList.add(p.argType());                    
+                } else if (predicateList.get(i) instanceof HashMap) {
+                    Map<String,List<Predicate>> map = (Map<String, List<Predicate>>) predicateList.get(i);
+                    
+                    int k=0;
+                    for (Map.Entry<String,List<Predicate>> entry : map.entrySet()) {                        
+                        List<Predicate> pList = entry.getValue();
+                        whereClause += " (";
+                        for (int j = 0; j < pList.size(); j++) {
+                            Predicate p = pList.get(j);
+                            whereClause += " " + p.databaseColumn() + " " + p.operator() + " ?";
+                            argsList.add(p.value());
+                            argTypesList.add(p.argType());
+                            if (j != pList.size() - 1) {
+                                whereClause += " OR";
+                            }
+                        }
+                        whereClause += ")";
+                       
+                        if (k!=map.size()-1) {
+                            whereClause += " AND";
+                        }
+                        
+                        k++;
+                    }                    
+                }
             }
 
             args = argsList.toArray();
