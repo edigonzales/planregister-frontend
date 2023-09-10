@@ -246,7 +246,7 @@ public class PlanregisterView extends VerticalLayout {
             }
             
             if (!planningInstrument.isEmpty()) {
-                predicateList.add(new Predicate("planungsinstrument", planningInstrument.getValue().name(), Types.VARCHAR, "="));
+                predicateList.add(new Predicate("planungsinstrument", "%"+planningInstrument.getValue().name()+"%", Types.VARCHAR, "ILIKE"));
             }
 
             if (!legalStatus.isEmpty()) {
