@@ -6,6 +6,8 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Service;
 
+import com.vaadin.flow.data.provider.QuerySortOrder;
+
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.sql.ResultSet;
@@ -29,7 +31,7 @@ public class DokumentService {
     @Autowired
     JdbcTemplate jdbcTemplate;
     
-    public List<Dokument> findDocuments(List<Object> predicateList) {
+    public List<Dokument> findDocuments(int offset, int limit, List<QuerySortOrder> sortOrders, List<Object> predicateList) {
     //public void findAllDocuments(String stringFilter) {
 //        if (stringFilter == null || stringFilter.isEmpty()) { 
 //            return contactRepository.findAll();
@@ -91,8 +93,15 @@ public class DokumentService {
             stmt += whereClause;
         }
         
-        stmt += " ORDER BY rrb_datum DESC NULLS LAST";
-        
+        if (sortOrders.size() == 0) {
+            stmt += " ORDER BY rrb_datum DESC NULLS LAST";
+        } else {
+            String column = sortOrders.get(0).getSorted();
+            String direction = sortOrders.get(0).getDirection().name();
+            stmt += " ORDER BY " + column + " " + (direction.contains("ASC") ? "ASC" : "DESC") + " NULLS LAST";
+        }
+
+        stmt += " LIMIT " + limit + " OFFSET " + offset;
         log.debug(stmt);
         
         List<Dokument> documentList=jdbcTemplate.query(stmt, args, argTypes,

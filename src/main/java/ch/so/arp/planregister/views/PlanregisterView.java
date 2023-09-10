@@ -7,6 +7,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.vaadin.flow.component.Component;
@@ -107,7 +108,7 @@ public class PlanregisterView extends VerticalLayout {
 //        updateList();
     }
     
-    public class Filters extends HorizontalLayout /*implements Specification<SamplePerson>*/ {
+    public class Filters extends HorizontalLayout {
 
         private final TextField fts = new TextField("Bezeichnung / Stichwort / RRB-Nr.");
         private final DatePicker startDate = new DatePicker("RRB-Datum");
@@ -139,6 +140,11 @@ public class PlanregisterView extends VerticalLayout {
             
             isPartOfLandUsePlanning.setLabel("Bestandteil der Ortsplanung");
                         
+            // Sort events
+            grid.addSortListener(event -> { 
+                onSearch.run();
+            });
+            
             // Action on components value change / key presses
             fts.addKeyDownListener(Key.ENTER, event -> {
                 if (!fts.isEmpty()) {
@@ -296,12 +302,13 @@ public class PlanregisterView extends VerticalLayout {
     }
     
     private Grid<Dokument> configureGrid() {
+        grid.setPageSize(100);
         grid.addClassNames("document-grid");
         grid.addThemeVariants(GridVariant.LUMO_WRAP_CELL_CONTENT, GridVariant.LUMO_NO_BORDER);
 
         grid.setSizeFull();
         
-        grid.addColumn(new LocalDateRenderer<>(Dokument::rrbDatum, "dd.MM.YYYY"))
+        grid.addColumn(new LocalDateRenderer<>(Dokument::rrbDatum, "dd.MM.YYYY")).setKey("rrb_datum")
         .setSortable(true)
         .setComparator(new Comparator<Dokument>() {
             @Override
@@ -314,23 +321,21 @@ public class PlanregisterView extends VerticalLayout {
             }
         })
         .setHeader("RRB-Datum").setWidth("5%");        
-        grid.addColumn(Dokument::rrbNr).setHeader("RRB-Nr.").setSortable(true).setWidth("5%");
-        grid.addColumn(Dokument::planungsinstrument).setHeader("Planungsinstrument").setSortable(true).setWidth("10%");
-        grid.addColumn(Dokument::bezeichnung).setHeader("Bezeichnung").setSortable(true).setAutoWidth(true).setFlexGrow(2);
-        grid.addColumn(Dokument::gemeinde).setHeader("Gemeinde").setSortable(true).setWidth("10%");
-        grid.addColumn(Dokument::rechtsstatus).setHeader("Rechtsstatus").setSortable(true).setWidth("5%");
-        grid.addColumn(Dokument::planungsbehoerde).setHeader("Planungsbehörde").setSortable(true).setWidth("5%");
+        grid.addColumn(Dokument::rrbNr).setHeader("RRB-Nr.").setKey("rrb_nr").setSortable(true).setWidth("5%");
+        grid.addColumn(Dokument::planungsinstrument).setHeader("Planungsinstrument").setKey("planungsinstrument").setSortable(true).setWidth("10%");
+        grid.addColumn(Dokument::bezeichnung).setHeader("Bezeichnung").setKey("bezeichnung").setSortable(true).setAutoWidth(true).setFlexGrow(2);
+        grid.addColumn(Dokument::gemeinde).setHeader("Gemeinde").setKey("gemeinde").setSortable(true).setWidth("10%");
+        grid.addColumn(Dokument::rechtsstatus).setHeader("Rechtsstatus").setKey("rechtsstatus").setSortable(true).setWidth("5%");
+        grid.addColumn(Dokument::planungsbehoerde).setHeader("Planungsbehörde").setKey("planungsbehoerde").setSortable(true).setWidth("5%");
         
         grid.setItemDetailsRenderer(createDocumentDetailsRenderer());
-
+        
         return grid;
         //grid.getColumns().forEach(col -> col.setAutoWidth(true)); 
     }
         
     private void refreshGrid() {
-        //System.out.println(filters.getPredicates());
-        grid.setItems(dokumentService.findDocuments(filters.getPredicates()));
-        //grid.getDataProvider().refreshAll();
+        grid.setItems(query -> dokumentService.findDocuments(query.getOffset(), query.getLimit(), query.getSortOrders(), filters.getPredicates()).stream());
     }
     
     private Renderer<Dokument> createDocumentDetailsRenderer() {
@@ -380,7 +385,6 @@ public class PlanregisterView extends VerticalLayout {
                 mapLinkField.getElement().addEventListener("click", event -> {
                     getUI().ifPresent(ui -> ui.getPage().open(mapLinkField.getValue()));
                 });
-
         }
 
         public void setDocument(Dokument document) {
@@ -399,6 +403,4 @@ public class PlanregisterView extends VerticalLayout {
 
         }
     }
-
-
 }
