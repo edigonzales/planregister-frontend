@@ -388,18 +388,18 @@ public class PlanregisterView extends VerticalLayout {
         }
 
         public void setDocument(Dokument document) {
-            municipalityField.setValue(document.gemeinde());
-            planningInstrumentField.setValue(document.planungsinstrument());
-            descriptionField.setValue(document.bezeichnung());
-            rrbDateField.setValue(document.rrbDatum().format(dtf));
-            rrbNumberField.setValue(document.rrbNr());
-            inForceSinceField.setValue(document.rechtskraftAb().format(dtf));
-            legalStatusField.setValue(document.rechtsstatus());
-            planningAuthorityField.setValue(document.planungsbehoerde());
-            responsibleOfficeField.setValue(document.zustaendigesAmt());
-            documentLinkField.setValue(document.dokumentUrl().toString());
+            if (document.gemeinde()!=null) municipalityField.setValue(document.gemeinde());
+            if (document.planungsinstrument()!=null) planningInstrumentField.setValue(document.planungsinstrument());
+            if (document.bezeichnung()!=null) descriptionField.setValue(document.bezeichnung());
+            if (document.rrbDatum()!=null) rrbDateField.setValue(document.rrbDatum().format(dtf));
+            if (document.rrbNr()!=null) rrbNumberField.setValue(document.rrbNr());
+            if (document.rechtskraftAb()!=null) inForceSinceField.setValue(document.rechtskraftAb().format(dtf));
+            if (document.rechtsstatus()!=null) legalStatusField.setValue(document.rechtsstatus());
+            if (document.planungsbehoerde()!=null) planningAuthorityField.setValue(document.planungsbehoerde());
+            if (document.zustaendigesAmt()!=null) responsibleOfficeField.setValue(document.zustaendigesAmt());
+            if (document.dokumentUrl()!=null) documentLinkField.setValue(document.dokumentUrl().toString());
             if (document.sonderbauvorschriftenUrl()!=null) specialDocumentLinkField.setValue(document.sonderbauvorschriftenUrl().toString());
-            mapLinkField.setValue(document.karteUrl().toString());
+            if (document.karteUrl()!=null) mapLinkField.setValue(document.karteUrl().toString());
 
         }
     }
