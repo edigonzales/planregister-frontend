@@ -1,0 +1,52 @@
+version: '3'
+services:
+  edit-db:
+    image: bitnami/postgresql:14.8.0-debian-11-r74
+    restart: unless-stopped
+    environment:
+      POSTGRESQL_DATABASE: edit
+      POSTGRESQL_USERNAME: ddluser
+      POSTGRESQL_PASSWORD: ddluser
+      POSTGRESQL_POSTGRES_PASSWORD: secret
+      POSTGRESQL_INITSCRIPTS_USERNAME: postgres
+      POSTGRESQL_INITSCRIPTS_PASSWORD: secret
+      TZ: Europe/Zurich
+    ports:
+      - "54321:5432"
+    volumes:
+      - type: bind
+        source: ./setup.sql
+        target: /docker-entrypoint-preinitdb.d/setup.sql
+      - type: bind
+        source: ./prepare_setup.sh
+        target: /docker-entrypoint-preinitdb.d/prepare_setup.sh
+      - type: volume
+        source: postgresql_data_edit
+        target: /bitnami/postgresql
+    labels:
+      org.springframework.boot.service-connection: postgres
+  reverse-proxy:
+    image: traefik:v2.10
+    restart: unless-stopped
+    command: --api.insecure=true --providers.docker
+    ports:
+      - "80:80"
+      - "8081:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+  frontend:
+    image: sogis/planregister-frontend-jvm:0
+    restart: unless-stopped
+    environment:
+      TZ: Europe/Zurich
+      DBURL: jdbc:postgresql://edit-db:5432/edit
+      DBSCHEMA: arp_nutzungsplanung_planregister_v1
+    entrypoint: "java -XX:+UseParallelGC -Xmx2G -jar application.jar"
+    ports:
+      - 8080:8080
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.frontend.rule=Host(`planregister.localhost`) || Host(`planregister.sogeo.services`)"
+      - "traefik.http.services.frontend.loadbalancer.server.port=8080"
+volumes:
+  postgresql_data_edit:
