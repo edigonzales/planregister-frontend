@@ -48,5 +48,15 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.frontend.rule=Host(`planregister.localhost`) || Host(`planregister.sogeo.services`)"
       - "traefik.http.services.frontend.loadbalancer.server.port=8080"
+  dozzle:
+    container_name: dozzle
+    image: amir20/dozzle:latest
+    environment:
+      DOZZLE_USERNAME: admin
+      DOZZLE_PASSWORD: admin
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - 9999:8080
 volumes:
   postgresql_data_edit:
